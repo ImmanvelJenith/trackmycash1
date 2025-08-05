@@ -6,7 +6,7 @@ import App from './App.jsx'
 import { ExpenseProvider } from './Context/ExpenseContext';
 
 createRoot(document.getElementById('root')).render(
-  <BrowserRouter basename="/trackmycash1">
+  <BrowserRouter >
     <ExpenseProvider>
       <App />
     </ExpenseProvider>
