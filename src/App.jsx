@@ -12,7 +12,7 @@ function App() {
     <ExpenseProvider>
       <Toaster position="top-right" />
       <Routes>
-        <Route path="/trackmycash1" element={
+        <Route path="/" element={
           <PrivateRoute>
             <Dashboard />
           </PrivateRoute>
