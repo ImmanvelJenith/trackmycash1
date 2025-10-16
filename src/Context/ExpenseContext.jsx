@@ -7,6 +7,10 @@ export const useExpense = () => useContext(ExpenseContext);
 
 const getToken = () => localStorage.getItem("token");
 
+// API base (updated to use the Render-hosted backend)
+export const API_BASE = "https://express-application-b92j.onrender.com";
+const EXPENSES_URL = `${API_BASE}/api/expenses`;
+
 const formatDate = (dateStr) => {
   const date = new Date(dateStr);
   if (isNaN(date.getTime())) return "N/A";
@@ -23,7 +27,7 @@ export const ExpenseProvider = ({ children }) => {
       return;
     }
 
-    fetch("http://localhost:3007/api/expenses", {
+    fetch(EXPENSES_URL, {
       headers: {
         Authorization: `Bearer ${token}`,
       },
@@ -57,7 +61,7 @@ export const ExpenseProvider = ({ children }) => {
       notes: expense.notes,
     };
 
-    fetch("http://localhost:3007/api/expenses", {
+    fetch(EXPENSES_URL, {
       method: "POST",
       headers: {
         "Content-Type": "application/json",
@@ -88,7 +92,7 @@ export const ExpenseProvider = ({ children }) => {
       return;
     }
 
-    fetch(`http://localhost:3007/api/expenses/${id}`, {
+    fetch(`${EXPENSES_URL}/${id}`, {
       method: "DELETE",
       headers: {
         Authorization: `Bearer ${token}`,
@@ -124,7 +128,7 @@ export const ExpenseProvider = ({ children }) => {
       notes: updatedExpense.notes,
     };
 
-    fetch(`http://localhost:3007/api/expenses/${id}`, {
+    fetch(`${EXPENSES_URL}/${id}`, {
       method: "PUT",
       headers: {
         "Content-Type": "application/json",

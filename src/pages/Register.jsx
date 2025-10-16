@@ -48,7 +48,7 @@ function Register() {
             return;
         }
 
-        fetch("http://localhost:3007/api/auth/register", {
+        fetch("https://express-application-b92j.onrender.com/api/auth/register", {
             method: "POST",
             headers: {
                 "Content-Type": "application/json",
