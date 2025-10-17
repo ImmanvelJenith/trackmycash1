@@ -31,11 +31,6 @@ function ExpenseTable() {
               <path stroke="currentColor" strokeLinecap="round" strokeWidth="2" d="M5 7h14M5 12h14M5 17h10" />
             </svg>
             </th>
-            <th><svg className="w-6 h-6 text-gray-800 dark:text-white me-2" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="none" viewBox="0 0 24 24">
-              <path stroke="currentColor" strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 10h16m-8-3V4M7 7V4m10 3V4M5 20h14a1 1 0 0 0 1-1V7a1 1 0 0 0-1-1H5a1 1 0 0 0-1 1v12a1 1 0 0 0 1 1Zm3-7h.01v.01H8V13Zm4 0h.01v.01H12V13Zm4 0h.01v.01H16V13Zm-8 4h.01v.01H8V17Zm4 0h.01v.01H12V17Zm4 0h.01v.01H16V17Z" />
-            </svg>
-              Date
-            </th>
             <th>
               <svg className="w-6 h-6 text-gray-800 dark:text-white me-2" aria-hidden="true" xmlns="http://www.w3.org/2000/svg" width="24" height="24" fill="none" viewBox="0 0 24 24">
                 <path stroke="currentColor" strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 4v15a1 1 0 0 0 1 1h15M8 16l2.5-5.5 3 3L17.273 7 20 9.667" />
@@ -68,19 +63,12 @@ function ExpenseTable() {
         <tbody>
           {data.length === 0 ? (
             <tr>
-              <td colSpan="8" className="text-center">No records found</td>
+              <td colSpan="7" className="text-center">No records found</td>
             </tr>
           ) : (
             data.map((item, index) => (
               <tr key={item._id}>
                 <td>{index + 1}</td>
-                <td>
-                  {(() => {
-                    const d = new Date(item.date);
-                    if (isNaN(d)) return "Invalid Date";
-                    return d.toLocaleDateString("en-GB").replaceAll("/", ".");
-                  })()}
-                </td>
                 <td>{item.type}</td>
                 <td>₹{item.amount}</td>
                 <td>{item.category}</td>

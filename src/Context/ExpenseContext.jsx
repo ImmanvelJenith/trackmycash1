@@ -1,159 +1,154 @@
-import { createContext, useContext, useState, useEffect } from 'react';
+import { createContext, useContext } from 'react';
 import toast from 'react-hot-toast';
+import { useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 
 const ExpenseContext = createContext();
 
 export const useExpense = () => useContext(ExpenseContext);
 
-const getToken = () => localStorage.getItem("token");
+const getToken = () => localStorage.getItem('token');
 
-// API base (updated to use the Render-hosted backend)
-export const API_BASE = "https://express-application-b92j.onrender.com";
+export const API_BASE = 'https://express-application-b92j.onrender.com';
 const EXPENSES_URL = `${API_BASE}/api/expenses`;
 
 const formatDate = (dateStr) => {
   const date = new Date(dateStr);
-  if (isNaN(date.getTime())) return "N/A";
-  return date.toLocaleDateString("en-GB").replaceAll("/", ".");
+  if (isNaN(date.getTime())) return 'N/A';
+  return date.toLocaleDateString('en-GB').replaceAll('/', '.');
 };
 
 export const ExpenseProvider = ({ children }) => {
-  const [data, setData] = useState([]);
+  const queryClient = useQueryClient();
 
-  useEffect(() => {
+  const fetchExpenses = async () => {
     const token = getToken();
     if (!token) {
-      toast.error("Token missing. Please login again.");
-      return;
+      throw new Error('Token missing');
     }
-
-    fetch(EXPENSES_URL, {
-      headers: {
-        Authorization: `Bearer ${token}`,
-      },
-    })
-      .then((res) => {
-        if (!res.ok) throw new Error("Unauthorized or Invalid Token");
-        return res.json();
-      })
-      .then((expenses) => {
-        setData(expenses);
-      })
-      .catch((err) => {
-        console.error("Fetch Error:", err.message);
-        toast.error("Failed to fetch expenses!");
-      });
-  }, []);
-
-  const addExpense = (expense) => {
-    const token = getToken();
-    if (!token) {
-      toast.error("Token missing");
-      return;
+    const res = await fetch(EXPENSES_URL, {
+      headers: { Authorization: `Bearer ${token}` },
+    });
+    if (!res.ok) {
+      throw new Error('Unauthorized or Invalid Token');
     }
-
-    const correctedExpense = {
-      date: formatDate(expense.date),
-      type: expense.type.toLowerCase(),
-      amount: Number(expense.amount),
-      category: expense.category,
-      paymentMethod: expense.paymentMethod,
-      notes: expense.notes,
-    };
-
-    fetch(EXPENSES_URL, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${token}`,
-      },
-      body: JSON.stringify(correctedExpense),
-    })
-      .then(async (res) => {
-        if (!res.ok) {
-          const errorText = await res.text();
-          throw new Error("Failed to add expense");
-        }
-        return res.json();
-      })
-      .then((newExpense) => {
-        setData((prev) => [...prev, newExpense]);
-      })
-      .catch((err) => {
-        console.error("Add Error:", err.message);
-        toast.error("Error adding expense!");
-      });
+    return res.json();
   };
 
-  const deleteExpense = (id) => {
-    const token = getToken();
-    if (!token) {
-      toast.error("Token missing");
-      return;
-    }
+  const { data = [], isLoading, isError } = useQuery({
+    queryKey: ['expenses'],
+    queryFn: fetchExpenses,
+    onError: (err) => {
+      console.error('Fetch Error:', err.message);
+      toast.error('Failed to fetch expenses!');
+    },
+  });
 
-    fetch(`${EXPENSES_URL}/${id}`, {
-      method: "DELETE",
-      headers: {
-        Authorization: `Bearer ${token}`,
-      },
-    })
-      .then((res) => {
-        if (!res.ok) throw new Error("Failed to delete");
-        return res.json();
-      })
-      .then(() => {
-        setData((prev) => prev.filter((item) => item._id !== id));
-        toast.success("Deleted Successfully!");
-      })
-      .catch((err) => {
-        console.error("Delete Error:", err.message);
-        toast.error("Error deleting expense!");
+  const addExpenseMutation = useMutation({
+    mutationFn: async (expense) => {
+      const token = getToken();
+      if (!token) throw new Error('Token missing');
+
+      const correctedExpense = {
+        date: expense.date, // store raw date string
+        type: expense.type.toLowerCase(),
+        amount: Number(expense.amount),
+        category: expense.category,
+        paymentMethod: expense.paymentMethod,
+        notes: expense.notes,
+      };
+
+      const res = await fetch(EXPENSES_URL, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify(correctedExpense),
       });
-  };
 
-  const editExpense = (id, updatedExpense) => {
-    const token = getToken();
-    if (!token) {
-      toast.error("Token missing");
-      return;
-    }
+      if (!res.ok) {
+        const errText = await res.text();
+        throw new Error(errText || 'Failed to add expense');
+      }
+      return res.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['expenses'] });
+    },
+    onError: (err) => {
+      console.error('Add Error:', err.message);
+      toast.error('Error adding expense!');
+    },
+  });
 
-    const correctedUpdate = {
-      date: formatDate(updatedExpense.date),
-      type: updatedExpense.type.toLowerCase(),
-      amount: updatedExpense.amount,
-      category: updatedExpense.category,
-      paymentMethod: updatedExpense.paymentMethod,
-      notes: updatedExpense.notes,
-    };
+  const deleteExpenseMutation = useMutation({
+    mutationFn: async (id) => {
+      const token = getToken();
+      if (!token) throw new Error('Token missing');
 
-    fetch(`${EXPENSES_URL}/${id}`, {
-      method: "PUT",
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${token}`,
-      },
-      body: JSON.stringify(correctedUpdate),
-    })
-      .then((res) => {
-        if (!res.ok) throw new Error("Failed to update");
-        return res.json();
-      })
-      .then((updatedItem) => {
-        setData((prev) =>
-          prev.map((item) => (item._id === id ? updatedItem : item))
-        );
-      })
-      .catch((err) => {
-        console.error("Update Error:", err.message);
-        toast.error("Error updating expense!");
+      const res = await fetch(`${EXPENSES_URL}/${id}`, {
+        method: 'DELETE',
+        headers: { Authorization: `Bearer ${token}` },
       });
-  };
+      if (!res.ok) {
+        const errText = await res.text();
+        throw new Error(errText || 'Failed to delete');
+      }
+      return res.json();
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ['expenses'] });
+      toast.success('Deleted Successfully!');
+    },
+    onError: (err) => {
+      console.error('Delete Error:', err.message);
+      toast.error('Error deleting expense!');
+    },
+  });
+
+  const editExpenseMutation = useMutation({
+    mutationFn: async ({ id, updatedExpense }) => {
+      const token = getToken();
+      if (!token) throw new Error('Token missing');
+
+      const correctedUpdate = {
+        date: updatedExpense.date,
+        type: updatedExpense.type.toLowerCase(),
+        amount: updatedExpense.amount,
+        category: updatedExpense.category,
+        paymentMethod: updatedExpense.paymentMethod,
+        notes: updatedExpense.notes,
+      };
+
+      const res = await fetch(`${EXPENSES_URL}/${id}`, {
+        method: 'PUT',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify(correctedUpdate),
+      });
+
+      if (!res.ok) {
+        const errText = await res.text();
+        throw new Error(errText || 'Failed to update');
+      }
+      return res.json();
+    },
+    onSuccess: () => queryClient.invalidateQueries({ queryKey: ['expenses'] }),
+    onError: (err) => {
+      console.error('Update Error:', err.message);
+      toast.error('Error updating expense!');
+    },
+  });
+
+  const addExpense = (expense) => addExpenseMutation.mutate(expense);
+  const deleteExpense = (id) => deleteExpenseMutation.mutate(id);
+  const editExpense = (id, updatedExpense) => editExpenseMutation.mutate({ id, updatedExpense });
 
   return (
     <ExpenseContext.Provider
-      value={{ data, addExpense, deleteExpense, editExpense }}
+      value={{ data, isLoading, isError, addExpense, deleteExpense, editExpense }}
     >
       {children}
     </ExpenseContext.Provider>
