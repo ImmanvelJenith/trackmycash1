@@ -6,6 +6,48 @@ import Modals from "../Component/Modal";
 
 function ExpenseTable() {
   const { data, deleteExpense } = useContext(ExpenseContext);
+  // Robust date formatter: accept ISO, Date objects, and common string formats like dd.mm.yyyy or dd/mm/yyyy
+  const formatDisplayDate = (dateVal) => {
+    if (!dateVal && dateVal !== 0) return "N/A";
+
+    // If it's already a Date object
+    if (dateVal instanceof Date) {
+      if (isNaN(dateVal)) return "Invalid Date";
+      return dateVal.toLocaleDateString("en-GB").replace(/\//g, ".");
+    }
+
+    // If it's a number (timestamp)
+    if (typeof dateVal === "number") {
+      const d = new Date(dateVal);
+      if (isNaN(d)) return "Invalid Date";
+      return d.toLocaleDateString("en-GB").replace(/\//g, ".");
+    }
+
+    // If it's a string
+    if (typeof dateVal === "string") {
+      const trimmed = dateVal.trim();
+
+      // Already formatted as dd.mm.yyyy
+      if (/^\d{1,2}\.\d{1,2}\.\d{4}$/.test(trimmed)) {
+        // Normalize to 2-digit day/month
+        const [d, m, y] = trimmed.split('.');
+        return `${String(d).padStart(2, '0')}.${String(m).padStart(2, '0')}.${y}`;
+      }
+
+      // Slash separated dd/mm/yyyy -> convert to dots
+      if (/^\d{1,2}\/\d{1,2}\/\d{4}$/.test(trimmed)) {
+        return trimmed.replace(/\//g, '.');
+      }
+
+      // Try ISO or other parseable formats
+      const parsed = new Date(trimmed);
+      if (!isNaN(parsed)) return parsed.toLocaleDateString("en-GB").replace(/\//g, ".");
+
+      return "Invalid Date";
+    }
+
+    return "Invalid Date";
+  };
   const [showModal, setShowModal] = useState(false);
   const [editData, setEditData] = useState(null);
   const [editIndex, setEditIndex] = useState(null);
@@ -74,13 +116,7 @@ function ExpenseTable() {
             data.map((item, index) => (
               <tr key={item._id}>
                 <td>{index + 1}</td>
-                <td>
-                  {(() => {
-                    const d = new Date(item.date);
-                    if (isNaN(d)) return "Invalid Date";
-                    return d.toLocaleDateString("en-GB").replaceAll("/", ".");
-                  })()}
-                </td>
+                <td>{formatDisplayDate(item.date)}</td>
                 <td>{item.type}</td>
                 <td>₹{item.amount}</td>
                 <td>{item.category}</td>
