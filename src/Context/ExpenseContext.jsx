@@ -11,12 +11,6 @@ const getToken = () => localStorage.getItem('token');
 export const API_BASE = 'https://express-application-b92j.onrender.com';
 const EXPENSES_URL = `${API_BASE}/api/expenses`;
 
-const formatDate = (dateStr) => {
-  const date = new Date(dateStr);
-  if (isNaN(date.getTime())) return 'N/A';
-  return date.toLocaleDateString('en-GB').replaceAll('/', '.');
-};
-
 export const ExpenseProvider = ({ children }) => {
   const queryClient = useQueryClient();
 
@@ -49,8 +43,7 @@ export const ExpenseProvider = ({ children }) => {
       if (!token) throw new Error('Token missing');
 
       const correctedExpense = {
-        date: expense.date, // store raw date string
-        type: expense.type.toLowerCase(),
+        type: expense.type,
         amount: Number(expense.amount),
         category: expense.category,
         paymentMethod: expense.paymentMethod,
@@ -113,7 +106,7 @@ export const ExpenseProvider = ({ children }) => {
 
       const correctedUpdate = {
         date: updatedExpense.date,
-        type: updatedExpense.type.toLowerCase(),
+        type: updatedExpense.type,
         amount: updatedExpense.amount,
         category: updatedExpense.category,
         paymentMethod: updatedExpense.paymentMethod,
