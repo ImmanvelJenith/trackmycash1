@@ -1,9 +1,8 @@
 import Modal from "react-bootstrap/Modal";
 import Button from "react-bootstrap/Button";
 import Form from "react-bootstrap/Form";
-import { useState, useEffect, useContext } from "react";
-// import { useExpense } from "../Context/ExpenseContext";
-import ExpenseContext from "../Context/ExpenseContext";
+import { useState, useEffect } from "react";
+import { useExpense } from "../Context/ExpenseContext";
 import { toast } from 'react-hot-toast';
 
 function Modals({ show, handleClose, editData = null }) {
@@ -13,7 +12,7 @@ function Modals({ show, handleClose, editData = null }) {
   const [paymentMethod, setPaymentMethod] = useState("");
   const [notes, setNote] = useState("");
 
-  const { addExpense, editExpense } = useContext(ExpenseContext);
+  const { addExpense, editExpense } = useExpense();
 
   useEffect(() => {
     if (editData) {
@@ -65,8 +64,8 @@ function Modals({ show, handleClose, editData = null }) {
             <Form.Label>Type</Form.Label>
             <Form.Select value={type} onChange={(e) => setType(e.target.value)} required>
               <option value="" disabled>select one</option>
-              <option value="Expense">Expense</option>
-              <option value="Income">Income</option>
+              <option value="expense">Expense</option>
+              <option value="income">Income</option>
             </Form.Select>
           </Form.Group>
 

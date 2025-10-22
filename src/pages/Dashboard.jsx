@@ -1,10 +1,9 @@
-import { useContext, useEffect, useState } from "react";
+import { useEffect, useState } from "react";
 import { useNavigate } from "react-router-dom";
 import Button from "react-bootstrap/Button";
 import Modals from "../Component/Modal";
 import ExpenseTable from "../Component/ExpenseTable";
-// import { useExpense } from "../Context/ExpenseContext";
-import ExpenseContext from "../Context/ExpenseContext";
+import { useExpense } from "../Context/ExpenseContext";
 import "./dashboard.css";
 import { toast } from "react-hot-toast";
 
@@ -14,7 +13,7 @@ function Dashboard() {
   const [expense, setExpense] = useState(0);
   const [income, setIncome] = useState(0);
   const navigate = useNavigate();
-  const { data } = useContext(ExpenseContext);
+  const { data, isLoading } = useExpense();
 
   useEffect(() => {
     const token = localStorage.getItem("token");
@@ -22,18 +21,19 @@ function Dashboard() {
   }, [navigate]);
 
   useEffect(() => {
-    const totalExpense = data
-      .filter((item) => item.type === "expense")
-      .reduce((acc, curr) => acc + (parseFloat(curr.amount) || 0), 0);
+    if (!isLoading && data) {
+      const totalExpense = data
+        .filter((item) => item.type === "expense")
+        .reduce((acc, curr) => acc + (parseFloat(curr.amount) || 0), 0);
 
-    const totalIncome = data
-      .filter((item) => item.type === "income")
-      .reduce((acc, curr) => acc + (parseFloat(curr.amount) || 0), 0);
+      const totalIncome = data
+        .filter((item) => item.type === "income")
+        .reduce((acc, curr) => acc + (parseFloat(curr.amount) || 0), 0);
 
-
-    setExpense(totalExpense);
-    setIncome(totalIncome);
-  }, [data]);
+      setExpense(totalExpense);
+      setIncome(totalIncome);
+    }
+  }, [data, isLoading]);
 
   const handleClose = () => setShow(false);
   const handleShow = () => setShow(true);
@@ -63,17 +63,17 @@ function Dashboard() {
       <div className="stats-container">
         <div className="stat-card expense-card">
           <div className="stat-label">Total Expense</div>
-          <div className="stat-value">₹{Math.floor(expense).toLocaleString("en-IN")}</div>
+          <div className="stat-value">₹{isLoading ? "..." : expense.toLocaleString("en-IN", { maximumFractionDigits: 2 })}</div>
         </div>
 
         <div className="stat-card income-card">
           <div className="stat-label">Total Income</div>
-          <div className="stat-value">₹{Math.floor(income).toLocaleString("en-IN")}</div>
+          <div className="stat-value">₹{isLoading ? "..." : income.toLocaleString("en-IN", { maximumFractionDigits: 2 })}</div>
         </div>
 
         <div className="stat-card balance-card">
           <div className="stat-label">Balance</div>
-          <div className="stat-value">₹{Math.floor( income - expense ).toLocaleString("en-IN")}
+          <div className="stat-value">₹{isLoading ? "..." : (income - expense).toLocaleString("en-IN", { maximumFractionDigits: 2 })}
 </div>
         </div>
       </div>

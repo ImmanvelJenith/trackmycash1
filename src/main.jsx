@@ -15,7 +15,7 @@ createRoot(document.getElementById('root')).render(
       <ExpenseProvider>
         <App />
       </ExpenseProvider>
-      <ReactQueryDevtools initialIsOpen={false} />
+      {/* <ReactQueryDevtools initialIsOpen={false} /> */}
     </QueryClientProvider>
   </BrowserRouter>
 )

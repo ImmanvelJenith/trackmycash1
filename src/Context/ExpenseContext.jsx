@@ -25,7 +25,7 @@ export const ExpenseProvider = ({ children }) => {
     if (!res.ok) {
       throw new Error('Unauthorized or Invalid Token');
     }
-    return res.json();
+    return res.json();  
   };
 
   const { data = [], isLoading, isError } = useQuery({
